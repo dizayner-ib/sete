@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aviator Mərc Oyunu</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(to bottom, #34495e, #2ecc71);
+      color: white;
+    }
+    #balance {
+      font-size: 30px;
+      margin-bottom: 30px;
+    }
+    #game-container {
+      text-align: center;
+    }
+    #start-btn, #bet-btn, #cashout-btn, #transfer-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin: 15px;
+    }
+    #start-btn:hover, #bet-btn:hover, #cashout-btn:hover, #transfer-btn:hover {
+      background: #c0392b;
+    }
+    #plane {
+      margin-top: 30px;
+      font-size: 60px;
+      transition: transform 0.3s;
+    }
+    #score {
+      font-size: 30px;
+      margin-top: 15px;
+    }
+    #bet-input {
+      padding: 10px;
+      font-size: 20px;
+      width: 100px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    #cashout-btn {
+      position: absolute;
+      bottom: 30px; /* Pulu çək düyməsini ekranda aşağıda yerləşdirdik */
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+    }
+    #transfer-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin: 15px;
+    }
+    #transfer-btn:hover {
+      background: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <div id="balance">Balans: 1 AZN</div>
+  <div id="game-container">
+    <input id="bet-input" type="number" placeholder="Mərc" min="1">
+    <button id="bet-btn">Mərc Et</button>
+    <button id="transfer-btn">Balansı Köçür</button> <!-- Yeni düymə -->
+    <button id="start-btn" style="display:none;">Oyuna Başla</button>
+    <div id="plane" style="display:none;">✈️</div>
+    <div id="score" style="display:none;">0 x</div>
+    <button id="cashout-btn" style="display:none;">Pulu Çək</button>
+  </div>
+
+  <script>
+    const balanceElement = document.getElementById("balance");
+    const betInput = document.getElementById("bet-input");
+    const betBtn = document.getElementById("bet-btn");
+    const startBtn = document.getElementById("start-btn");
+    const plane = document.getElementById("plane");
+    const score = document.getElementById("score");
+    const cashoutBtn = document.getElementById("cashout-btn");
+    const transferBtn = document.getElementById("transfer-btn");
+
+    let balance = 1;
+    let betAmount = 0;
+    let multiplier = 1;
+    let gameInterval;
+    let crashPoint = Math.random() * (10 - 1.5) + 1.5; // Təsadüfi olaraq 1.5x ilə 10x arasında uduş nöqtəsi
+
+    // Mərc düyməsi funksiyası
+    betBtn.addEventListener("click", () => {
+      betAmount = parseFloat(betInput.value);
+
+      if (isNaN(betAmount) || betAmount <= 0) {
+        alert("Zəhmət olmasa düzgün mərc məbləği daxil edin!");
+        return;
+      }
+
+      if (betAmount > balance) {
+        alert("Balansda kifayət qədər məbləğ yoxdur!");
+        return;
+      }
+
+      balance -= betAmount;
+      balanceElement.textContent = `Balans: ${balance.toFixed(2)} AZN`;
+
+      betInput.style.display = "none";
+      betBtn.style.display = "none";
+      startBtn.style.display = "inline-block";
+    });
+
+    // Oyuna başla düyməsi funksiyası
+    startBtn.addEventListener("click", () => {
+      startBtn.style.display = "none";
+      plane.style.display = "block";
+      score.style.display = "block";
+      cashoutBtn.style.display = "inline-block"; // Pulu Çək düyməsini göstəririk
+
+      multiplier = 1;
+      score.textContent = `${multiplier.toFixed(2)} x`;
+
+      gameInterval = setInterval(() => {
+        multiplier += 0.1;
+        score.textContent = `${multiplier.toFixed(2)} x`;
+        plane.style.transform = `translateY(-${multiplier * 30}px)`;
+
+        // Uduş nöqtəsinə çatdıqda
+        if (multiplier >= crashPoint) {
+          clearInterval(gameInterval);
+          alert("Təyyarə partladı! Mərcinizi itirdiniz.");
+          resetGame();
+        }
+      }, 100);
+    });
+
+    // Pulu Çək düyməsi funksiyası
+    cashoutBtn.addEventListener("click", () => {
+      const winAmount = betAmount * multiplier;
+      balance += winAmount;
+      balanceElement.textContent = `Balans: ${balance.toFixed(2)} AZN`;
+
+      clearInterval(gameInterval);
+      alert(`Qazandınız: ${winAmount.toFixed(2)} AZN!`);
+      resetGame();
+    });
+
+    // Balansı Köçür düyməsi funksiyası
+    transferBtn.addEventListener("click", () => {
+      const transferAmount = parseFloat(betInput.value); // Mərc məbləği ilə balansı köçürmək
+      if (isNaN(transferAmount) || transferAmount <= 0) {
+        alert("Zəhmət olmasa düzgün məbləğ daxil edin!");
+        return;
+      }
+
+      if (transferAmount > balance) {
+        alert("Balansda kifayət qədər məbləğ yoxdur!");
+        return;
+      }
+
+      balance -= transferAmount;
+      balanceElement.textContent = `Balans: ${balance.toFixed(2)} AZN`;
+      alert(`${transferAmount.toFixed(2)} AZN balansdan köçürüldü.`);
+    });
+
+    function resetGame() {
+      plane.style.display = "none";
+      score.style.display = "none";
+      cashoutBtn.style.display = "none";
+      betInput.style.display = "inline-block";
+      betBtn.style.display = "inline-block";
+      betInput.value = "";
+      crashPoint = Math.random() * (10 - 1.5) + 1.5; // Yeni oyun üçün təsadüfi uduş nöqtəsi
+    }
+  </script>
+</body>
+</html>
